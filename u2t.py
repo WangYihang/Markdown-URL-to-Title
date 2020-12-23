@@ -35,7 +35,11 @@ class App:
     def parse(self, url):
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         response = requests.get(url, headers=headers)
-        title = bs4.BeautifulSoup(response.content, "html.parser").title.string
+        try:
+            title = bs4.BeautifulSoup(response.content, "html.parser").title.string
+        except Exception as e:
+            print(repr(e))
+            title = url
         return title
 
     def toast(self, text):
@@ -56,7 +60,15 @@ class App:
         if len(urls) > 0:
             print("Found {} urls in clipboard".format(len(urls)))
             ignored = 0
+            origin_content = []
+            origin_urls = []
+            left = data
+            result = []
             for url in urls:
+                origin_content.append(left.split(url)[0])
+                origin_urls.append(url)
+                left = left[left.index(url) + len(url):]
+            for i, url in enumerate(urls):
                 print("-" * 0x20)
                 print("Parsing: {}".format(url))
                 if data[:data.index(url)].strip().endswith("](") and data[data.index(url) + len(url):].strip().startswith(")"):
@@ -67,10 +79,11 @@ class App:
                 print("Found title: {}".format(title))
                 print("Generating markdown...")
                 markdown = "[{}]({})".format(title, url)
-                print("Replace {} to {}".format(url, markdown))
-                data = data.replace(url, markdown)
+                result.append(origin_content[i])
+                result.append(markdown)
+            result.append(left)
             print("-" * 0x20)
-            clipboard.copy(data)
+            clipboard.copy("".join(result))
             self.toast("{}/{} url has been parsed.".format(len(urls) - ignored, len(urls)))
         else:
             print("No url found in clipboard")
