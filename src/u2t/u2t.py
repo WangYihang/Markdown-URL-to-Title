@@ -104,10 +104,3 @@ class App:
         else:
             print("No url found in clipboard")
         self.set_icon_normal()
-
-def main():
-    app = App()
-    app.start()
-
-if __name__ == "__main__":
-    main()
