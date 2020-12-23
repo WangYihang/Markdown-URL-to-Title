@@ -1,9 +1,10 @@
-import system_hotkey
-import clipboard
-import requests
 import bs4
-import re
+import clipboard
 import infi.systray
+import os
+import re
+import requests
+import system_hotkey
 import win10toast
 
 class App:
@@ -14,15 +15,19 @@ class App:
         self.running_icon = "resources\\icon\\running.ico"
         self.options = ()
         self.systray = infi.systray.SysTrayIcon(self.normal_icon, self.title, self.options, on_quit=self.on_quit)
-        self.hotkey = ('control', 'shift', 'q')
+        self.parse_hotkey = ('control', 'shift', 'q')
+        self.exit_hotkey = ('control', 'c')
         self.cache = {}
 
     def start(self):
         print("Starting...")
         self.systray.start()
-        self.hk.register(self.hotkey, callback=self.convert)
-        print("Hotkey {} registed".format(self.hotkey))
-        print("Copy markdown content and press {} to update url title".format("+".join(self.hotkey)))
+        self.hk.register(self.parse_hotkey, callback=self.do_convert)
+        print("Hotkey {} registed".format(self.parse_hotkey))
+        print("Copy markdown content and press {} to update url title".format("+".join(self.parse_hotkey)))
+        self.hk.register(self.exit_hotkey, callback=self.do_exit)
+        print("Hotkey {} registed".format(self.exit_hotkey))
+        print("Press {} to exit".format("+".join(self.exit_hotkey)))
 
     def set_icon_normal(self):
         self.systray.update(icon=self.normal_icon)
@@ -31,7 +36,11 @@ class App:
         self.systray.update(icon=self.running_icon)
 
     def on_quit(self, sysTrayIcon):
-        self.hk.unregister(self.hotkey)
+        self.hk.unregister(self.parse_hotkey)
+        self.hk.unregister(self.exit_hotkey)
+
+    def do_exit(self, sysTrayIcon):
+        self.systray.shutdown()
 
     def parse(self, url):
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
@@ -51,7 +60,7 @@ class App:
             duration=2,
         )
 
-    def convert(self, sysTrayIcon):
+    def do_convert(self, sysTrayIcon):
         self.set_icon_running()
         data = clipboard.paste()
         pattern = r'https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
