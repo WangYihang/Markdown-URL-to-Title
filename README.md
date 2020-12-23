@@ -44,12 +44,19 @@ https://baidu.com/
 
 ## 安装
 
+### 通过 PyPi
+
+```
+pip install u2t
+```
+### 通过 GitHub
+
 ```bash
 git clone https://github.com/WangYihang/Markdown-URL-to-Title
 ```
 
 ## 使用方式
-0. 运行：`cd Markdown-URL-to-Title; python u2t.py`，此时系统托盘出现图标
-1. 复制待处理文本，不用特别精确地只复制 URL，本程序使用正则提取剪切板内容中的所有 URL 并进行批量处理
-2. 按快捷键 Ctrl + Shift + Q
-3. 等待数秒，待 Windows 弹出 Toast 提示框，即可直接进行粘贴
+1. 打开终端，运行：`u2t`，此时系统托盘出现图标
+2. 复制待处理文本，不用特别精确地只复制 URL，本程序使用正则提取剪切板内容中的所有 URL 并进行批量处理
+3. 按快捷键 Ctrl + Shift + Q
+4. 等待数秒，待 Windows 弹出 Toast 提示框，即可直接进行粘贴

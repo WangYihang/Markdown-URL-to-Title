@@ -1,11 +1,13 @@
 import bs4
 import clipboard
 import infi.systray
-import os
 import re
 import requests
 import system_hotkey
 import win10toast
+import os
+import pkg_resources
+
 
 class App:
     def __init__(self):
@@ -14,17 +16,18 @@ class App:
         self.normal_icon = "resources\\icon\\normal.ico"
         self.running_icon = "resources\\icon\\running.ico"
         self.options = ()
-        self.systray = infi.systray.SysTrayIcon(self.normal_icon, self.title, self.options, on_quit=self.on_quit)
+        self.systray = infi.systray.SysTrayIcon(
+            self.normal_icon, self.title, self.options, on_quit=self.on_quit)
         self.parse_hotkey = ('control', 'shift', 'q')
         self.exit_hotkey = ('control', 'c')
         self.cache = {}
 
     def start(self):
-        print("Starting...")
         self.systray.start()
         self.hk.register(self.parse_hotkey, callback=self.do_convert)
         print("Hotkey {} registed".format(self.parse_hotkey))
-        print("Copy markdown content and press {} to update url title".format("+".join(self.parse_hotkey)))
+        print("Copy markdown content and press {} to update url title".format(
+            "+".join(self.parse_hotkey)))
         self.hk.register(self.exit_hotkey, callback=self.do_exit)
         print("Hotkey {} registed".format(self.exit_hotkey))
         print("Press {} to exit".format("+".join(self.exit_hotkey)))
@@ -43,10 +46,12 @@ class App:
         self.systray.shutdown()
 
     def parse(self, url):
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         response = requests.get(url, headers=headers)
         try:
-            title = bs4.BeautifulSoup(response.content, "html.parser").title.string
+            title = bs4.BeautifulSoup(
+                response.content, "html.parser").title.string
         except Exception as e:
             print(repr(e))
             title = url
@@ -98,9 +103,23 @@ class App:
             result.append(left)
             clipboard.copy("".join(result))
             if ignored == 0:
-                self.toast("{}/{} url has been parsed.".format(len(urls) - ignored, len(urls)))
+                self.toast(
+                    "{}/{} url has been parsed.".format(len(urls) - ignored, len(urls)))
             else:
-                self.toast("{}/{} url has been parsed, {} ignored".format(len(urls) - ignored, len(urls), ignored))
+                self.toast(
+                    "{}/{} url has been parsed, {} ignored".format(len(urls) - ignored, len(urls), ignored))
         else:
             print("No url found in clipboard")
         self.set_icon_normal()
+
+
+def init():
+    distribution = pkg_resources.get_distribution('u2t')
+    os.chdir(distribution.location)
+    os.chdir(distribution.project_name)
+
+
+def main():
+    init()
+    app = App()
+    app.start()
