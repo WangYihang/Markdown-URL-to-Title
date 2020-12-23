@@ -15,6 +15,7 @@ class App:
         self.options = ()
         self.systray = infi.systray.SysTrayIcon(self.normal_icon, self.title, self.options, on_quit=self.on_quit)
         self.hotkey = ('control', 'shift', 'q')
+        self.cache = {}
 
     def start(self):
         print("Starting...")
@@ -52,39 +53,45 @@ class App:
 
     def convert(self, sysTrayIcon):
         self.set_icon_running()
-        print("Reading clipboard...")
         data = clipboard.paste()
-        print("Clipboard: {}".format(repr(data)))
         pattern = r'https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
         urls = re.findall(pattern, data)
         if len(urls) > 0:
-            print("Found {} urls in clipboard".format(len(urls)))
             ignored = 0
             origin_content = []
-            origin_urls = []
             left = data
             result = []
             for url in urls:
                 origin_content.append(left.split(url)[0])
-                origin_urls.append(url)
                 left = left[left.index(url) + len(url):]
+            origin_content.append(left)
+            assert len(origin_content) == len(urls) + 1
+
+            # parse url title using threading pool
+            for url in urls:
+                # check cache existance
+                if url not in self.cache.keys():
+                    self.cache[url] = self.parse(url)
+
+            # wait for all jobs finished, which means that all urls have been parsed
             for i, url in enumerate(urls):
-                print("-" * 0x20)
-                print("Parsing: {}".format(url))
-                if data[:data.index(url)].strip().endswith("](") and data[data.index(url) + len(url):].strip().startswith(")"):
-                    print("This url is already surrounded in markdown style")
+                part = origin_content[i]
+                next_part = origin_content[i+1]
+                markdown = "[{}]({})".format(self.cache[url], url)
+                print("[{} / {}] {}".format(i + 1, len(urls), markdown), end="")
+                if part.strip().endswith("](") and next_part.strip().startswith(")"):
+                    print("[IGNORED]")
                     ignored += 1
                     continue
-                title = self.parse(url)
-                print("Found title: {}".format(title))
-                print("Generating markdown...")
-                markdown = "[{}]({})".format(title, url)
-                result.append(origin_content[i])
+                print()
+                result.append(part)
                 result.append(markdown)
             result.append(left)
-            print("-" * 0x20)
             clipboard.copy("".join(result))
-            self.toast("{}/{} url has been parsed.".format(len(urls) - ignored, len(urls)))
+            if ignored == 0:
+                self.toast("{}/{} url has been parsed.".format(len(urls) - ignored, len(urls)))
+            else:
+                self.toast("{}/{} url has been parsed, {} ignored".format(len(urls) - ignored, len(urls), ignored))
         else:
             print("No url found in clipboard")
         self.set_icon_normal()
