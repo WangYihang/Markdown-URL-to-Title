@@ -19,7 +19,6 @@ class App:
         self.systray = infi.systray.SysTrayIcon(
             self.normal_icon, self.title, self.options, on_quit=self.on_quit)
         self.parse_hotkey = ('control', 'shift', 'q')
-        self.exit_hotkey = ('control', 'c')
         self.cache = {}
 
     def start(self):
@@ -28,9 +27,6 @@ class App:
         print("Hotkey {} registed".format(self.parse_hotkey))
         print("Copy markdown content and press {} to update url title".format(
             "+".join(self.parse_hotkey)))
-        self.hk.register(self.exit_hotkey, callback=self.do_exit)
-        print("Hotkey {} registed".format(self.exit_hotkey))
-        print("Press {} to exit".format("+".join(self.exit_hotkey)))
 
     def set_icon_normal(self):
         self.systray.update(icon=self.normal_icon)
@@ -40,10 +36,6 @@ class App:
 
     def on_quit(self, sysTrayIcon):
         self.hk.unregister(self.parse_hotkey)
-        self.hk.unregister(self.exit_hotkey)
-
-    def do_exit(self, sysTrayIcon):
-        self.systray.shutdown()
 
     def parse(self, url):
         headers = {
@@ -51,7 +43,7 @@ class App:
         response = requests.get(url, headers=headers)
         try:
             title = bs4.BeautifulSoup(
-                response.content, "html.parser").title.string
+                response.content, "html.parser").title.string.strip()
         except Exception as e:
             print(repr(e))
             title = url
@@ -123,3 +115,7 @@ def main():
     init()
     app = App()
     app.start()
+
+
+if __name__ == "__main__":
+    main()
