@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="u2t",
-    version="1.0.2",
+    version="1.0.3",
     author="Wang Yihang",
     author_email="wangyihanger@gmail.com",
     description="A tool helps to convert url to markdown style url format",
